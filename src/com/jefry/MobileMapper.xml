@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mobile">
+	 <resultMap id="userResultMap" type="Mobile"> 
+	    <id property="id" column="id"/>	  
+	     <result property="mobileNoid" column="mobile_noid"/> 
+	    <result property="telnumber" column="telnumber"/>
+	    
+	     <association property="commun" column="commun_noid" javaType="Commun">	    	  
+	    	 <result property="communNoid" column="commun_noid"/> 
+	         <result property="communName" column="commun_name"/> 	        
+	    </association>
+	    
+	    <association property="user" column="user_noid" javaType="User"><!--【association不需要column】	    属性是 user对象里面的， 但是 取值  是   moible表里面的 userid  -->  
+	    	  
+	    	 	<result property="userNoid" column="user_noid"/> 
+	           <result property="userName" column="name"/> 
+	           <result property="password" column="pass"/> 
+	    </association>
+	    
+		  <collection property="callrecordSet" column="mobile_noid" ofType="Callrecord">	
+		  		  
+		  		  <result property="callNoid" column="call_noid"/>   
+			      <result property="callPasstive" column="call_passtive"/>
+			      <result property="callDuration" column="call_duration"/>
+			 
+	    </collection>
+     </resultMap>
+	    <resultMap type="Agricultural" id="allocatinglandResult">
+		<id column="GD_GUID" property="GD_GUID"/>
+		<!--行号-->
+		<result property="ROWNUM" column="ROWNUM" />
+		<!--行政区-->
+		<result property="XZQ_DM" column="XZQ_DM" />
+		<!--项目名称-->
+		<result property="XM_MC" column="XM_MC" />
+		<!--供地标识-->
+		<result property="GD_GUID" column="GD_GUID" />
+		<!--批准文号-->
+		<result property="PZ_WH" column="PZ_WH" />
+		<!--总面积-->
+		<result property="GD_ZMJ" column="GD_ZMJ" />
+		<!--供应面积-->
+		<result property="GY_MJ" column="GY_MJ" />
+		<!--状态-->
+		<result property="XM_ZT" column="XM_ZT" />
+		<!--批准日期-->
+		<result property="PZ_RQ" column="PZ_RQ" />		
+		<!--宗地标识-->
+		<result property="ZD_GUID" column="ZD_GUID" />
+		<!--批准机关-->
+		<result property="PZ_JG" column="PZ_JG" />
+		<!--供应方式-->
+		<result property="GY_FS" column="GY_FS" />
+		<!--宗地编号-->
+		<result property="ZD_BH" column="ZD_BH" />
+		<association property="allocatinglandTable"  column="GD_GUID"  javaType="Allocatingland">
+			<id column="GD_GUID" property="GD_GUID"/>
+	        <!--使用权人-->			
+			<result column="SYQR" property="SYQR"/>
+		</association>
+	</resultMap>
+	
+	<!--多表查询操作   -->
+	<select id="selectMobile" parameterType="int"  resultMap="userResultMap" >
+		<!--分别为mobile的主键id与user的主键id赋值别名,避免因为两个表字段名称相同而注入到对应对象名称冲突
+        select
+         m.id m_id
+         ,m.telnumber
+         ,u.id u_id
+         ,u.name
+         ,u.pass
+          from
+           t_mobile m,t_user u
+            where m.user_id = u.id 
+          -->
+          select     
+         u.name 
+         ,cm.commun_name 
+       		, m.*  	 <!-- 这里如果 使用  m.telnumber  (不使用 *)  就查出list集合里面的 数据总和 ，把list集合里面的数据都到外面来了 -->
+       		, c.*      
+       		
+          from  t_mobile m
+          	LEFT JOIN t_commun cm           on m.commun_noid 	= cm.commun_noid 
+           	LEFT JOIN t_user u             	on m.user_noid 		= u.user_noid 
+            LEFT JOIN t_callrecord c 		on m.mobile_noid 	= c.mobile_noid 	
+	</select>
+	
+	<select id="selectAllocatingland" parameterType="int" resultMap="allocatinglandResult">
+		SELECT
+			A.XZQ_DM  AS XZQ_DM,
+			A.XM_MC   AS XM_MC,
+			A.GD_GUID AS GD_GUID,
+			A.PZ_WH   AS PZ_WH,
+			A.GD_ZMJ  AS GD_ZMJ,
+			A.GY_MJ   AS GY_MJ,
+			A.XM_ZT   AS XM_ZT,
+			A.PZ_RQ   AS PZ_RQ,
+			A.ZD_GUID AS ZD_GUID,
+			A.PZ_JG   AS PZ_JG,
+			A.GY_FS   AS GY_FS,
+			A.ZD_BH   AS ZD_BH,
+			B.SYQR    AS SYQR
+		FROM T_GDXM A,T_HBGY_KZ B 
+		WHERE  A.GD_GUID = B.GD_GUID
+ 	</select>
+	
+</mapper>
